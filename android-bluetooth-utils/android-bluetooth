@@ -58,27 +58,48 @@ _android_bluetooth_tethering() {
   local \
     _action="${1}" \
     _status
+  _msg_info \
+    "action ${_action}"
   if [[ "${_action}" == "enable" ]]; then
     _status="$( \
       _android_bluetooth_status)"
     if [[ "${_status}" == "disabled" ]]; then
-        activity-launch \
-          "${_settings_app}" \
-          "${_tethering_activity}"
-        sdotool \
-          key \
-            "Down"
-        sdotool \
-          key \
-            "Down"
+      _msg_info \
+      "enabling tethering"
+      activity-launch \
+        "${_settings_app}" \
+        "${_tethering_activity}"
+      sdotool \
+        key \
+          "Down"
+      sdotool \
+        key \
+          "Down"
         # sdotool \
         #   key \
         #     "Down"
-        sdotool \
-          key \
-            "Enter"
+      sdotool \
+        key \
+          "Enter"
     fi
+  elif [[ "${_action}" == "disable" ]]; then
+    _msg_info \
+      "disabling tethering"
+    _android_bluetooth_set \
+      "${_action}"
   fi
+}
+
+_android_bluetooth_set() {
+  local \
+    _cmd=()
+  _cmd+=(
+    sudo
+      "/system/bin/cmd"
+        bluetooth_manager
+        "${_command}"  
+  )
+  "${_cmd[@]}"
 }
 
 _android_bluetooth() {
@@ -91,13 +112,8 @@ _android_bluetooth() {
   if \
     [[ "${_command}" == "enable" ]] || \
     [[ "${_command}" == "disable" ]]; then
-    _cmd+=(
-      sudo
-      /system/bin/cmd
-        bluetooth_manager
-        "${_command}"  
-    )
-    "${_cmd[@]}"
+    _android_bluetooth_set \
+      "${_command}"
   elif \
     [[ "${_command}" == "status" ]]; then
     _android_bluetooth_status
