@@ -58,17 +58,22 @@ _android_bluetooth_tethering() {
   local \
     _action="${1}" \
     _status \
-    _activity_launch_opts=()
+    _activity_launch_opts=() \
+    _poll \
+    _key_delay
   if [[ "${quiet}" == "n" ]]; then
   _activity_launch_opts+=(
     -v
   )
   fi
+  _poll="3"
+  _delay="5"
+  _length="10"
   _activity_launch_opts+=(
     -p
-      5
+      "${_poll}"
     -L
-      10
+      "${_length}"
   )
   _msg_info \
     "action ${_action}"
@@ -81,19 +86,21 @@ _android_bluetooth_tethering() {
       activity-launch \
         "${_activity_launch_opts[@]}" \
         "${_settings_app}" \
-        "${_tethering_activity}"
-      sdotool \
-        key \
-          "Down"
-      sdotool \
-        key \
-          "Down"
+        "${_tethering_activity}" & \
+      ( sleep \
+          "${_delay}" && \
+        sdotool \
+          key \
+            "Down" &&
+        sdotool \
+          key \
+            "Down" && \
+        sdotool \
+          key \
+            "Enter" )
         # sdotool \
         #   key \
         #     "Down"
-      sdotool \
-        key \
-          "Enter"
     fi
   elif [[ "${_action}" == "disable" ]]; then
     _msg_info \
