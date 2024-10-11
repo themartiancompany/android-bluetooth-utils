@@ -60,16 +60,17 @@ _android_bluetooth_tethering() {
     _status \
     _activity_launch_opts=() \
     _poll \
-    _key_delay
+    _key_delay \
+    _length
   if [[ "${quiet}" == "n" ]]; then
   _activity_launch_opts+=(
     -v
   )
   fi
-  _poll="3"
-  _delay="5"
-  _length="10"
-  _activity_launch_opts+=(
+  _poll="7"
+  _key_delay="12"
+  _length="8"
+_activity_launch_opts+=(
     -p
       "${_poll}"
     -L
@@ -88,7 +89,7 @@ _android_bluetooth_tethering() {
         "${_settings_app}" \
         "${_tethering_activity}" & \
       ( sleep \
-          "${_delay}" && \
+          "${_key_delay}" && \
         sdotool \
           key \
             "Down" &&
