@@ -92,6 +92,7 @@ _android_bluetooth_tethering() {
 
 _android_bluetooth_set() {
   local \
+    _command="${1}" \
     _cmd=()
   _cmd+=(
     sudo
