@@ -57,7 +57,14 @@ _android_bluetooth_status() {
 _android_bluetooth_tethering() {
   local \
     _action="${1}" \
-    _status
+    _status \
+    _activity_launch_opts=()
+  _activity_launch_opts+=(
+    -p
+      3
+    -L
+      6
+  )
   _msg_info \
     "action ${_action}"
   if [[ "${_action}" == "enable" ]]; then
@@ -67,6 +74,7 @@ _android_bluetooth_tethering() {
       _msg_info \
       "enabling tethering"
       activity-launch \
+        "${_activity_launch[@]}" \
         "${_settings_app}" \
         "${_tethering_activity}"
       sdotool \
