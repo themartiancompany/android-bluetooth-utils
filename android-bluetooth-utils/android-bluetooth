@@ -15,6 +15,11 @@ source \
 
 _requirements() {
   _check_cmd \
+    "activity-launch" \
+    "android-activity-utils"
+  _check_cmd \
+    "sdotool"
+  _check_cmd \
     "sudo" \
     "tsu"
 }
@@ -28,11 +33,61 @@ _global_variables() {
   quiet=""
 }
 
+_android_bluetooth_status() {
+  local \
+    _cmd=()
+  _cmd+=(
+    sudo
+      "/system/bin/settings"
+        get
+          global
+          "bluetooth_on"
+  )
+  _status="$( \
+    "${_cmd[@]}")"
+  if [[ ${_status} == "0" ]]; then
+    echo \
+      "disabled"
+  elif [[ ${_status} == "1" ]]; then
+    echo \
+      "enabled"
+  fi
+}
+
+_android_bluetooth_tethering() {
+  local \
+    _action="${1}" \
+    _status
+  if [[ "${_action}" == "enable" ]]; then
+    _status="$( \
+      _android_bluetooth_status)"
+    if [[ "${_status}" == "disabled" ]]; then
+        activity-launch \
+          "${_settings_app}" \
+          "${_tethering_activity}"
+        sdotool \
+          key \
+            "Down"
+        sdotool \
+          key \
+            "Down"
+        # sdotool \
+        #   key \
+        #     "Down"
+        sdotool \
+          key \
+            "Enter"
+    fi
+  fi
+}
+
 _android_bluetooth() {
   local \
     _command="${1}" \
     _value="${2}" \
-    _cmd=()
+    _cmd=() \
+    _settings_app="com.android.settings"
+  _tethering_activity="TetherSettings"
   if \
     [[ "${_command}" == "enable" ]] || \
     [[ "${_command}" == "disable" ]]; then
@@ -42,8 +97,15 @@ _android_bluetooth() {
         bluetooth_manager
         "${_command}"  
     )
+    "${_cmd[@]}"
+  elif \
+    [[ "${_command}" == "status" ]]; then
+    _android_bluetooth_status
+  elif \
+    [[ "${_command}" == "tethering" ]]; then
+    _android_bluetooth_tethering \
+      "${_value}"
   fi
-  "${_cmd[@]}"
 }
 
 _set_overrides() {
