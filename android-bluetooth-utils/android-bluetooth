@@ -1,0 +1,170 @@
+#!/usr/bin/env bash
+#
+# SPDX-License-Identifier: AGPL-3.0
+
+_bin="$( \
+  dirname \
+    "$( \
+      command \
+        -v \
+	  "env")")"
+_lib="${_bin}/../lib"
+_share="${_bin}/../share"
+source \
+  "${_lib}/libcrash-bash/crash-bash"
+
+_requirements() {
+  _check_cmd \
+    "sudo" \
+    "tsu"
+}
+
+# shellcheck disable=SC2034
+_global_variables() {
+  command_date=""
+  target_command=""
+  target_value=""
+  color=""
+  quiet=""
+}
+
+_android_bluetooth() {
+  local \
+    _command="${1}" \
+    _value="${2}" \
+    _cmd=()
+  if \
+    [[ "${_command}" == "enable" ]] || \
+    [[ "${_command}" == "disable" ]]; then
+    _cmd+=(
+      sudo
+      /system/bin/cmd
+        bluetooth_manager
+        "${_command}"  
+    )
+  fi
+  "${_cmd[@]}"
+}
+
+_set_overrides() {
+  _set_override \
+    "command" \
+    "date" \
+    "$(_get_date_human)"
+  _set_override \
+    "target" \
+    "command" \
+    "enable"
+  _set_override \
+    "target" \
+    "value" \
+    ""
+  if [[ -v override_color ]]; then
+    color="${override_color}"
+  elif [[ -z "${color}" ]]; then
+    color="n"
+  fi
+  if [[ -v override_quiet ]]; then
+    quiet="${override_quiet}"
+  elif [[ -z "${quiet}" ]]; then
+    quiet="y"
+  fi
+}
+
+# Shows configuration options.
+_show_config() {
+  _msg_info "${app_name} configuration"
+  _msg_info "             Command date:   $(_get "command" "date")"
+  _msg_info "           Target command:   $(_get "target" "command")"
+  _msg_info "             Target value:   $(_get "target" "value")"
+}
+
+# Show help usage, with an exit status.
+# $1: exit status number.
+_usage() {
+  local \
+    _usage_text
+  IFS='' \
+    read \
+      -r \
+      -d '' \
+      _usage_text << \
+        ENDUSAGETEXT || true
+
+Controls bluetooth in Android
+
+Usage:
+  $(_get "app" "name")
+    [options]
+    <command>
+    ([command_args])
+
+    commands:
+     enable
+     disable
+
+    options:
+     -h                   This message.
+     -v                   Enable verbose output
+ENDUSAGETEXT
+  _printf \
+    '%s\n' \
+    "${_usage_text}"
+  exit \
+    "${1}"
+}
+
+_globals
+_global_variables
+_requirements
+# shellcheck disable=SC2004
+# shellcheck disable=SC2034
+while \
+  getopts \
+    'cvh?' \
+    arg; do
+  case \
+    "${arg}" in
+    c) override_color="y" ;;
+    v) override_quiet="n" ;;
+    h|?) _set_overrides && \
+	 _usage \
+           0 ;;
+    *)
+    _msg_error \
+      "Invalid argument '${arg}'" \
+      0 && \
+    _set_overrides && \
+    _usage \
+      1
+    ;;
+  esac
+done
+shift \
+  $(( \
+    OPTIND - 1 \
+  ))
+(( 0 < $# )) && \
+  _set \
+    "target" \
+    "command" \
+    "${1}"
+(( 1 < $# )) && \
+  _set \
+    "target" \
+    "value" \
+    "${2}"
+_set_overrides
+app_opts=(
+  "$(_get \
+       "target" \
+       "command")"
+  "$(_get \
+       "target" \
+       "value")"
+)
+_show_config
+_android_bluetooth \
+  "${app_opts[@]}"
+
+# vim:set sw=2 sts=-1 et:
